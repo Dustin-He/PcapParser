@@ -68,7 +68,7 @@ std::ostream & operator << (std::ostream &outs, const PacketStatistics & ps) {
     outs << "\e[35m max: \e[0m" << *std::max_element(ps.total_len.begin(), ps.total_len.end());
     outs << "\e[35m min: \e[0m" << *std::min_element(ps.total_len.begin(), ps.total_len.end()) << std::endl;
 
-    outs << "Skewness: " << ps.skewness << std::endl << std::resetiosflags(std::ios::fixed) << std::setprecision(6);
+    outs << "\e[31mSkewness: \e[0m" << ps.skewness << std::endl << std::resetiosflags(std::ios::fixed) << std::setprecision(6);
     return outs;
 }
 

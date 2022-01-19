@@ -16,7 +16,7 @@ class PcapParser {
     UDPHeader udp_header;
 
     /* Arguments to define the parser behaviors */
-    bool to_binary_file, to_txt_file, contain_eth_header;
+    bool to_binary_file, to_txt_file, contain_eth_header, to_pcap_file;
     FILE *input, *output;
     int64_t packet_offset;
     int64_t packet_cnt, flow_cnt, epoch_num, current_epoch, total_packets, total_flows;
@@ -70,6 +70,13 @@ class PcapParser {
        double expectation1 = calculateExpectation(distribution1);
        double expectation2 = calculateExpectation(distribution2);
        double expectation3 = calculateExpectation(distribution3);
+    //    for (auto iter = distribution1.begin(); iter != distribution1.end(); ++iter) {
+    //        std::cout << iter->first << " " << iter->second << std::endl;
+    //    }
+    //    expectation1 = 0;
+    //    expectation2 = 5;
+    //    expectation3 = 13.6;
+    //    std::cout << expectation1 << " " << expectation2 << " " << expectation3 << std::endl;
 
        return (expectation3 - 3 * expectation1 * expectation2 + 2 * expectation1 * expectation1 * expectation1) / pow(expectation2 - expectation1 * expectation1, 1.5);
     }
@@ -114,7 +121,7 @@ class PcapParser {
 
 public:
     
-    PcapParser(const char *input_path, const char *output_path, int64_t pkt_cnt = -1, bool binary_file = true, bool txt_file = false,
+    PcapParser(const char *input_path, const char *output_path, int64_t pkt_cnt = -1, bool binary_file = true, bool txt_file = false, bool pcap_file = false,
                 int64_t fl_cnt = -1, int64_t ep_num = -1, double ep_len = 1)
     {
         packet_offset = 24;
@@ -130,10 +137,11 @@ public:
             output = fopen(output_path, "w");
             to_binary_file = binary_file;
             to_txt_file = txt_file;
+            to_pcap_file = pcap_file;
         }
         else {
             output = NULL;
-            to_binary_file = to_txt_file = false;
+            to_binary_file = to_txt_file = to_pcap_file = false;
         }
         flow_set.clear();
     }
@@ -193,7 +201,6 @@ public:
         switch (ip_ver) {
             case 4: {
                 if (ip_header.protocol == PROTOCOL_TCP) {
-                    // std::cout << "hi\n";
                     if (fread(&tcp_header, sizeof(TCPHeader), 1, input) == 1) {
                         total_packets += 1;
                     }
@@ -263,8 +270,11 @@ public:
             if (to_binary_file) {
                 pcapWritePacketBinary(key_content, value_content);
             }
-            else {
+            else if (to_txt_file) {
                 pcapWritePacketText(key_content, value_content);
+            }
+            else if (to_pcap_file) {
+                pcapWritePacketPcap();
             }
         }
 
@@ -276,13 +286,25 @@ public:
     }
 
     inline void pcapWritePacketBinary(SketchLab::FlowKey<flowkey_len> k, Value v) const {
-        // std::cout << "in writer\n";
         fwrite(key_content.cKey(), flowkey_len, 1, output);
     }
 
     inline void pcapWritePacketText(SketchLab::FlowKey<flowkey_len> k, Value v) {
 
     }
+
+    inline void pcapWritePacketPcap() {
+        int64_t pcap_data_len = packet_header.caplen + PCAP_PKT_HEADER_LENGTH;
+        char * buf[5005];
+        assert(pcap_data_len <= 5005);
+        if (fseek(input, -pcap_data_len, SEEK_CUR) != 0) {
+            printf("Can not seek the previous packet!\n");
+            return;
+        }
+        fread(buf, pcap_data_len, pcap_data_len, input);
+        fwrite(buf, pcap_data_len, 1, output);
+    }
+
 };
 
 }

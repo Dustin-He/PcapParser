@@ -9,7 +9,7 @@ namespace Parser{
 // TODO: config, but not compile
 // TODO: reconstruct the code
 // TODO: flow count
-template<int flowkey_len, int value_scheme>
+template<int flowkey_len>
 class PcapParser {
     /* Pcap header & all packet headers */
     PcapFileHeader pcap_header;
@@ -28,7 +28,7 @@ class PcapParser {
 
     /* For statistics */
     SketchLab::FlowKey<flowkey_len> key_content;
-    Value value_content;
+    std::unique_ptr<Value> value_content;
     TimeVal start_time;
     bool first_packet;
 
@@ -90,16 +90,16 @@ class PcapParser {
     void fillFlowKey() {
         switch (flowkey_len) {
             case 4:
-            key_content.copy(0, SketchLab::FlowKey<4>(ntohl(ip_header.src_ip)), 0, 4);
+            key_content.copy(0, SketchLab::FlowKey<4>(ntohl(ip_header.src_ip)).cKey(), 4);
             break;
             case 8:
-            key_content.copy(0, SketchLab::FlowKey<8>(ntohl(ip_header.src_ip), ntohl(ip_header.dst_ip)), 0, 8);
+            key_content.copy(0, SketchLab::FlowKey<8>(ntohl(ip_header.src_ip), ntohl(ip_header.dst_ip)).cKey(), 8);
             break;
             case 13:
             if (ip_header.protocol == PROTOCOL_TCP)
-                key_content.copy(0, SketchLab::FlowKey<13>(ntohl(ip_header.src_ip), ntohl(ip_header.dst_ip), ntohs(tcp_header.src_port), ntohs(tcp_header.dst_port), ip_header.protocol), 0, 13);
+                key_content.copy(0, SketchLab::FlowKey<13>(ntohl(ip_header.src_ip), ntohl(ip_header.dst_ip), ntohs(tcp_header.src_port), ntohs(tcp_header.dst_port), ip_header.protocol).cKey(), 13);
             else if (ip_header.protocol == PROTOCOL_UDP)
-                key_content.copy(0, SketchLab::FlowKey<13>(ntohl(ip_header.src_ip), ntohl(ip_header.dst_ip), ntohs(udp_header.src_port), ntohs(udp_header.dst_port), ip_header.protocol), 0, 13);
+                key_content.copy(0, SketchLab::FlowKey<13>(ntohl(ip_header.src_ip), ntohl(ip_header.dst_ip), ntohs(udp_header.src_port), ntohs(udp_header.dst_port), ip_header.protocol).cKey(), 13);
             break;
             default:
             break;
@@ -107,18 +107,18 @@ class PcapParser {
     }
 
     void fillValue() {
-        switch (value_scheme) {
+        switch (value_content->scheme) {
             case 0:
             break;
             case 1:
-            value_content.time_stamp = packet_header.time_stamp;
+            value_content->time_stamp = packet_header.time_stamp;
             break;
             case 2:
-            value_content.length = ntohs(ip_header.total_len);
+            value_content->length = ntohs(ip_header.total_len);
             break;
             case 3:
-            value_content.time_stamp = packet_header.time_stamp;
-            value_content.length = ntohs(ip_header.total_len);
+            value_content->time_stamp = packet_header.time_stamp;
+            value_content->length = ntohs(ip_header.total_len);
             break;
             default:
             break;
@@ -127,7 +127,8 @@ class PcapParser {
 
 public:
     
-    PcapParser(const char *input_path, const char *output_path, int64_t pkt_cnt = -1, bool binary_file = true, bool txt_file = false, bool pcap_file = false,
+    PcapParser(const char *input_path, const char *output_path, std::unique_ptr<Value> &v_ptr, int64_t pkt_cnt = -1,
+                bool binary_file = false, bool txt_file = false, bool pcap_file = false,
                 int64_t fl_cnt = -1, int64_t ep_num = -1, double ep_len = 1)
     {
         packet_offset = 24;
@@ -137,9 +138,10 @@ public:
         epoch_length = ep_len;
         current_epoch = total_packets = total_flows = 0;
         first_packet = true;
+        value_content = std::move(v_ptr);
         input = fopen(input_path, "rb");
         
-        if (output_path[0] != 0) {
+        if (output_path[0] != 0 && (binary_file || txt_file || pcap_file)) {
             output = fopen(output_path, "w");
             to_binary_file = binary_file;
             to_txt_file = txt_file;
@@ -295,12 +297,12 @@ public:
         return 0;
     }
 
-    inline void pcapWritePacketBinary(SketchLab::FlowKey<flowkey_len> k, Value v) const {
+    inline void pcapWritePacketBinary(SketchLab::FlowKey<flowkey_len> k, std::unique_ptr<Value> &v) const {
         fwrite(key_content.cKey(), flowkey_len, 1, output);
     }
 
     // TODO
-    inline void pcapWritePacketText(SketchLab::FlowKey<flowkey_len> k, Value v) {
+    inline void pcapWritePacketText(SketchLab::FlowKey<flowkey_len> k, std::unique_ptr<Value> &v) {
 
     }
 

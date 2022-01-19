@@ -1,7 +1,7 @@
 #ifndef _PACKET_HEADER_H
 #define _PACKET_HEADER_H
 
-// #pragma pack(1)
+#pragma pack(1)
 
 // pcap文件头结构体
 struct PcapFileHeader {
@@ -78,6 +78,6 @@ struct UDPHeader {
 //   uint8_t Protocol;   //协议类型
 // };
 
-// #pragma pack()
+#pragma pack()
 
 #endif

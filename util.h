@@ -13,6 +13,9 @@
 #include <map>
 #include <vector>
 #include <numeric>
+#include <algorithm>
+#include <cassert>
+#include <string>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include "PacketHeader.h"
@@ -29,6 +32,7 @@
 #define PCAP_PKT_HEADER_LENGTH 16
 
 #define VECTOR_LENGTH 60
+#define BUFFER_LEN 10005
 
 class PacketStatistics {
 public:

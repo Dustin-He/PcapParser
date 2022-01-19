@@ -5,6 +5,10 @@
 
 namespace Parser{
 
+// TODO: Factory methods for scheme
+// TODO: config, but not compile
+// TODO: reconstruct the code
+// TODO: flow count
 template<int flowkey_len, int value_scheme>
 class PcapParser {
     /* Pcap header & all packet headers */
@@ -27,6 +31,8 @@ class PcapParser {
     Value value_content;
     TimeVal start_time;
     bool first_packet;
+
+    char buffer[BUFFER_LEN];
 
     PacketStatistics ps;
 
@@ -92,7 +98,7 @@ class PcapParser {
             case 13:
             if (ip_header.protocol == PROTOCOL_TCP)
                 key_content.copy(0, SketchLab::FlowKey<13>(ntohl(ip_header.src_ip), ntohl(ip_header.dst_ip), ntohs(tcp_header.src_port), ntohs(tcp_header.dst_port), ip_header.protocol), 0, 13);
-            else
+            else if (ip_header.protocol == PROTOCOL_UDP)
                 key_content.copy(0, SketchLab::FlowKey<13>(ntohl(ip_header.src_ip), ntohl(ip_header.dst_ip), ntohs(udp_header.src_port), ntohs(udp_header.dst_port), ip_header.protocol), 0, 13);
             break;
             default:
@@ -144,6 +150,7 @@ public:
             to_binary_file = to_txt_file = to_pcap_file = false;
         }
         flow_set.clear();
+        memset(buffer, 0, BUFFER_LEN);
     }
 
     ~PcapParser() {
@@ -152,6 +159,7 @@ public:
             fclose(output);
     }
 
+    // TODO: fread one time, copy several times
     int pcapReadPacket() {
         //读pcap数据包头结构
         if (fread(&packet_header, 16, 1, input) != 1) {
@@ -183,40 +191,37 @@ public:
             return 3;
         }
 
-        if (contain_eth_header) {
-            if (fread(&eth_header, sizeof(FrameHeader), 1, input) != 1) {
-                printf("Can not read eth_header\n");
-                return 1;
-            }
-        }
+        memcpy(buffer, &packet_header, sizeof(packet_header));
 
-        if (fread(&ip_header, sizeof(IPHeader), 1, input) != 1) {
-            printf("Can not read ip_header\n");
+        if (fread(buffer + sizeof(packet_header), packet_header.caplen, 1, input) != 1) {
+            printf("Can not read the packet\n");
             return 1;
         }
+
+        uint32_t offset = sizeof(packet_header);
+
+        if (contain_eth_header) {
+            memcpy(&eth_header, buffer + offset, sizeof(eth_header));
+            offset += sizeof(eth_header);
+        }
+
+        memcpy(&ip_header, buffer + offset, sizeof(ip_header));
+        offset += sizeof(ip_header);
 
         /* ip头前4位为版本号, ipv4的为4，ipv6的为6 */
         uint8_t ip_ver = (ip_header.ver_hlen >> 4) & (0b00001111);
         bool other_packet = false;
         switch (ip_ver) {
             case 4: {
-                if (ip_header.protocol == PROTOCOL_TCP) {
-                    if (fread(&tcp_header, sizeof(TCPHeader), 1, input) == 1) {
-                        total_packets += 1;
-                    }
-                    else {
-                        printf("Can not read tcp_header\n");
-                        return 1;
-                    }
+                if (ip_header.protocol == PROTOCOL_TCP && packet_header.caplen > offset - sizeof(packet_header)) {
+                    memcpy(&tcp_header, buffer + offset, sizeof(tcp_header));
+                    total_packets += 1;
+                    offset += sizeof(tcp_header);
                 }
-                else if (ip_header.protocol == PROTOCOL_UDP){
-                    if (fread(&udp_header, sizeof(UDPHeader), 1, input) == 1) {
-                        total_packets += 1;
-                    }
-                    else {
-                        printf("Can not read tcp_header\n");
-                        return 1;
-                    }
+                else if (ip_header.protocol == PROTOCOL_UDP && packet_header.caplen > offset - sizeof(packet_header)){
+                    memcpy(&udp_header, buffer + offset, sizeof(udp_header));
+                    total_packets += 1;
+                    offset += sizeof(udp_header);
                 }
                 else {
                     other_packet = true;
@@ -242,8 +247,11 @@ public:
             printf("Can not read pcap header\n");
             return 1;
         }
+        if (to_pcap_file) {
+            fwrite(&pcap_header, PCAP_HEADER_LENGTH, 1, output);
+        }
         contain_eth_header = (pcap_header.linktype == CONTAIN_ETH);
-
+        uint8_t test_key[13] = {36, 1, 43, 155, 210, 152, 168, 199, 110, 80, 90, 170, 17};
         // 遍历数据包
         int ret = 0;
         while ((ret = fseek(input, packet_offset, SEEK_SET)) == 0) {
@@ -267,6 +275,9 @@ public:
                 // if (current_epoch == epoch_num - 1)
                     // std::cout << flow_set.size() << std::endl;
             }
+            else {
+                continue;
+            }
             if (to_binary_file) {
                 pcapWritePacketBinary(key_content, value_content);
             }
@@ -280,7 +291,6 @@ public:
 
         ps.flow_num[current_epoch] = flow_set.size();
         ps.skewness = calculateSkewness();
-        // std::cout << "packet count:" << packet_cnt << " " << total_packets << std::endl;
         std::cout << ps;
         return 0;
     }
@@ -289,20 +299,15 @@ public:
         fwrite(key_content.cKey(), flowkey_len, 1, output);
     }
 
+    // TODO
     inline void pcapWritePacketText(SketchLab::FlowKey<flowkey_len> k, Value v) {
 
     }
 
     inline void pcapWritePacketPcap() {
         int64_t pcap_data_len = packet_header.caplen + PCAP_PKT_HEADER_LENGTH;
-        char * buf[5005];
-        assert(pcap_data_len <= 5005);
-        if (fseek(input, -pcap_data_len, SEEK_CUR) != 0) {
-            printf("Can not seek the previous packet!\n");
-            return;
-        }
-        fread(buf, pcap_data_len, pcap_data_len, input);
-        fwrite(buf, pcap_data_len, 1, output);
+        assert(pcap_data_len <= BUFFER_LEN);
+        fwrite(buffer, pcap_data_len, 1, output);
     }
 
 };

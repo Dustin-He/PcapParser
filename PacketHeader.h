@@ -1,7 +1,7 @@
 #ifndef _PACKET_HEADER_H
 #define _PACKET_HEADER_H
 
-#pragma pack(1)
+// #pragma pack(1)
 
 // pcap文件头结构体
 struct PcapFileHeader {
@@ -22,7 +22,7 @@ struct TimeVal {
 
 // pcap数据包头结构体
 struct PcapPacketHeader {
-    TimeVal time_stamp;             // time stamp
+    TimeVal time_stamp;     // time stamp
     uint32_t caplen;        // 当前数据区的长度，即抓取到的数据帧长度
     uint32_t len;           // 离线数据长度：网络中实际数据帧的长度，一般不大于caplen，多数情况下和Caplen数值相等
 };
@@ -78,6 +78,6 @@ struct UDPHeader {
 //   uint8_t Protocol;   //协议类型
 // };
 
-#pragma pack()
+// #pragma pack()
 
 #endif

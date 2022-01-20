@@ -1,7 +1,7 @@
 #include "parser.h"
 
 int main(int argc, char *argv[]) {
-	std::string config_file;
+	std::string config_file = "parser.conf";
 
 	option options[] = {{"config_file", required_argument, nullptr, 'c'},
 						{"help", no_argument, nullptr, 'h'}};
@@ -29,12 +29,16 @@ int main(int argc, char *argv[]) {
 	bool write_to_binary_file = config->GetBoolean("parser", "write_to_binary_file", false);
 	bool write_to_txt_file = config->GetBoolean("parser", "write_to_txt_file", false);
 	bool write_to_pcap_file = config->GetBoolean("parser", "write_to_pcap_file", false);
+	bool network_endian = config->GetBoolean("parser", "network_endian", false);
 	int key_len = config->GetInteger("parser", "key_len", 13);
-	int val_type = config->GetInteger("parser", "val_type", 0);
+	int val_timestamp = config->GetInteger("parser", "val_timestamp", 0);
+	int val_length = config->GetInteger("parser", "val_length", 0);
 	std::string input_path = config->Get("parser", "input_path", "");
 	std::string output_path = config->Get("parser", "output_path", "");
 
-	std::unique_ptr<Value> v_ptr(new Value(val_type));
+	int val_type = ((1?val_timestamp:0) << (PcapValue::ValueScheme::VAL_TIMESTAMP)) + ((1?val_length:0) << (PcapValue::ValueScheme::VAL_LENGTH));
+
+	std::unique_ptr<PcapValue::Value> v_ptr(new PcapValue::Value(val_type));
 	switch (key_len) {
 		case 4:
 		{

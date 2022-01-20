@@ -1,6 +1,8 @@
 #ifndef _PACKET_HEADER_H
 #define _PACKET_HEADER_H
 
+namespace PacketHeader {
+
 #pragma pack(1)
 
 // pcap文件头结构体
@@ -69,15 +71,8 @@ struct UDPHeader {
     uint16_t checksum;      // 校验和16bit
 };
 
-// struct Quintet {
-//   double timestamp;  //这个包的精确时间戳
-//   uint32_t SrcIP;     //源IP地址
-//   uint32_t DstIP;     //目的IP地址
-//   u_int16_t SrcPort; // 源端口号16bit
-//   u_int16_t DstPort; // 目的端口号16bit
-//   uint8_t Protocol;   //协议类型
-// };
-
 #pragma pack()
+
+}
 
 #endif

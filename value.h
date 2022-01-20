@@ -3,9 +3,11 @@
 
 #include "PacketHeader.h"
 
+namespace PcapValue {
+
 class Value {
 public:
-    TimeVal time_stamp;
+    PacketHeader::TimeVal time_stamp;
     uint16_t length;
     uint8_t scheme;
 
@@ -13,5 +15,12 @@ public:
         scheme = sc;
     }
 };
+
+enum ValueScheme {
+    VAL_TIMESTAMP,
+    VAL_LENGTH
+};
+
+}
 
 #endif

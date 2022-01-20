@@ -36,6 +36,8 @@
 #define VECTOR_LENGTH 60
 #define BUFFER_LEN 10005
 
+namespace PacketStatistics {
+
 class PacketStatistics {
 public:
     std::vector<uint32_t> flow_num, packet_num, total_len;
@@ -76,6 +78,8 @@ std::ostream & operator << (std::ostream &outs, const PacketStatistics & ps) {
 
     outs << "\e[31mSkewness: \e[0m" << ps.skewness << std::endl << std::resetiosflags(std::ios::fixed) << std::setprecision(6);
     return outs;
+}
+
 }
 
 #endif

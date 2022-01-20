@@ -70,7 +70,7 @@ If you just need to analyze the file, but not to generate a new file, you have t
 
 **The value is put after the flow key, if any value is needed.**
 
-Timestamp is a (4+4)-byte value. The significant 32 bits represents seconds, the others represents microseconds/nanseconds.
+Timestamp is a (4+4)-byte value. The significant 32 bits represent seconds, the others represent microseconds/nanseconds.
 
 Length is a 2-byte value.
 

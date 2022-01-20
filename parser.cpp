@@ -1,15 +1,26 @@
 #include "parser.h"
 
 int main(int argc, char *argv[]) {
-	std::string input_path;
-	std::string output_path;
-	std::string config_file = "./parser.conf";
-	std::unique_ptr<INIReader> config(new INIReader(config_file));
-	// TODO: arguments
-	if (argc < 2) {
-		printf("Usage: ./parser input_path [output_path]");
-		return 1;
+	std::string config_file;
+
+	option options[] = {{"config_file", required_argument, nullptr, 'c'},
+						{"help", no_argument, nullptr, 'h'}};
+
+	int opt;
+	while ((opt = getopt_long(argc, argv, "c:h", options, nullptr)) != -1) {
+		switch(opt) {
+			case 'c':
+			config_file = optarg;
+			break;
+			case 'h':
+			printf("Usage: ./parser [-h] [-c config_file]([--config_file config_file])\n");
+			exit(0);
+			default:
+			break;
+		}
 	}
+
+	std::unique_ptr<INIReader> config(new INIReader(config_file));
 
 	int64_t packet_count = config->GetInteger("parser", "packet_count", -1);
 	int64_t flow_count = config->GetInteger("parser", "flow_count", -1);
@@ -20,10 +31,8 @@ int main(int argc, char *argv[]) {
 	bool write_to_pcap_file = config->GetBoolean("parser", "write_to_pcap_file", false);
 	int key_len = config->GetInteger("parser", "key_len", 13);
 	int val_type = config->GetInteger("parser", "val_type", 0);
-
-	input_path = argv[1];
-	if (argc > 2)
-		output_path = argv[2];
+	std::string input_path = config->Get("parser", "input_path", "");
+	std::string output_path = config->Get("parser", "output_path", "");
 
 	std::unique_ptr<Value> v_ptr(new Value(val_type));
 	switch (key_len) {

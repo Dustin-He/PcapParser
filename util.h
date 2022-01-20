@@ -23,6 +23,7 @@
 #include "value.h"
 // #include "parameters.h"
 #include "INIReader.h"
+#include "getopt.h"
 
 #define PROTOCOL_TCP 0x6
 #define PROTOCOL_UDP 0x11

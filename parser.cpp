@@ -36,6 +36,8 @@ int main(int argc, char *argv[]) {
 	std::string input_path = config->Get("parser", "input_path", "");
 	std::string output_path = config->Get("parser", "output_path", "");
 
+	assert(((write_to_binary_file ^ write_to_pcap_file ^ write_to_txt_file) == 1) || !(write_to_binary_file || write_to_pcap_file || write_to_txt_file));
+
 	int val_type = ((1?val_timestamp:0) << (PcapValue::ValueScheme::VAL_TIMESTAMP)) + ((1?val_length:0) << (PcapValue::ValueScheme::VAL_LENGTH));
 
 	std::unique_ptr<PcapValue::Value> v_ptr(new PcapValue::Value(val_type));

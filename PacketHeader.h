@@ -27,6 +27,7 @@ struct PcapPacketHeader {
     TimeVal time_stamp;     // time stamp
     uint32_t caplen;        // 当前数据区的长度，即抓取到的数据帧长度
     uint32_t len;           // 离线数据长度：网络中实际数据帧的长度，一般不大于caplen，多数情况下和Caplen数值相等
+    void reverseEndian();
 };
 
 //数据帧头
@@ -70,6 +71,25 @@ struct UDPHeader {
     uint16_t len;           // 数据包长度16bit
     uint16_t checksum;      // 校验和16bit
 };
+
+inline uint16_t reverseEndianS(uint16_t x) {
+    return ((x >> 8) ^ (x << 8));
+}
+
+inline uint32_t reverseEndianL(uint32_t x) {
+    return reverseEndianS(x >> 16) ^ (reverseEndianS(x & 0x0000ffff) << 16);
+}
+
+inline uint64_t reverseEndianD(uint64_t x) {
+    return reverseEndianL(x >> 32) ^ ((uint64_t)reverseEndianL(x & 0x00000000ffffffff) << 32);
+}
+
+void PcapPacketHeader::reverseEndian() {
+    time_stamp.tv_sec = reverseEndianL(time_stamp.tv_sec);
+    time_stamp.tv_usec = reverseEndianL(time_stamp.tv_usec);
+    len = reverseEndianL(len);
+    caplen = reverseEndianL(caplen);
+}
 
 #pragma pack()
 

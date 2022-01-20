@@ -58,13 +58,13 @@ If you just need to analyze the file, but not to generate a new file, you have t
 
 ### Format of the binary file
 
-##### Flow key
+#### Flow key
 
 + 1-tuple: ip.src
 + 2-tuple: ip.src  ip.dst
 + 5-tuple: ip.src  ip.dst  src_port  dst_port  ip.protocol
 
-##### Value
+#### Value
 
 **The values are already in machine endian.**
 

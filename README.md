@@ -11,7 +11,7 @@
 
 ```shell
 make
-./parser [-h] [-c config_file]([--config_file config_file])
+./parser [-h]([--help]) [-c config_file]([--config_file config_file])
 ```
 
 

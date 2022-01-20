@@ -13,7 +13,7 @@ int main(int argc, char *argv[]) {
 			config_file = optarg;
 			break;
 			case 'h':
-			printf("Usage: ./parser [-h] [-c config_file]([--config_file config_file])\n");
+			printf("Usage: ./parser [-h]([--help]) [-c config_file]([--config_file config_file])\n");
 			exit(0);
 			default:
 			break;

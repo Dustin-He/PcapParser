@@ -39,8 +39,8 @@ key_len = 13			# The length of the flow keys, only 4(1-tuple), 8(2-tuple), 13(5-
 val_timestamp = 1		# Whether to include packet timestamp in the value
 val_length = 1			# Whether to include packet length in the value
 
-# input file path
-input_path = /Users/hejintao/Desktop/parser/CAIDA_data/equinix-nyc.dirA.20180315-130000.UTC.anon.pcap
+# input file path(" is not needed)
+input_path = input_pcap_file
 # output file path
 output_path = ./data.txt
 ```

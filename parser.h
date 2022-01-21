@@ -465,6 +465,7 @@ int PcapParser<flowkey_len>::pcapParse() {
 
     ps.flow_num[current_epoch] = flow_set.size();
     ps.skewness = calculateSkewness();
+    ps.total_flows = flow_map.size();
     std::cout << ps;
     return 0;
 }

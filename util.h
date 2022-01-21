@@ -44,6 +44,7 @@ namespace PacketStatistics {
 class PacketStatistics {
 public:
     std::vector<uint32_t> flow_num, packet_num, total_len;
+    uint32_t total_flows;
     double skewness;
 
     PacketStatistics() {
@@ -51,6 +52,7 @@ public:
         packet_num.push_back(0);
         total_len.push_back(0);
         skewness = 0;
+        total_flows = 0;
     }
 
     friend std::ostream & operator << (std::ostream &outs, const PacketStatistics & ps); 
@@ -64,7 +66,7 @@ std::ostream & operator << (std::ostream &outs, const PacketStatistics & ps) {
     outs << "\e[35mavg: \e[0m" << std::accumulate(std::begin(ps.flow_num), std::end(ps.flow_num), 0.0) / ps.flow_num.size();
     outs << "\e[35m max: \e[0m" << *std::max_element(ps.flow_num.begin(), ps.flow_num.end());
     outs << "\e[35m min: \e[0m" << *std::min_element(ps.flow_num.begin(), ps.flow_num.end());
-    outs << "\e[35m tot: \e[0m" << (uint64_t)std::accumulate(std::begin(ps.flow_num), std::end(ps.flow_num), 0.0) << std::endl;
+    outs << "\e[35m tot: \e[0m" << ps.total_flows << std::endl;
 
     outs << "\e[31mPacket Number:\e[0m\n";
     for (auto iter =  ps.packet_num.begin(); iter != ps.packet_num.end(); ++iter)

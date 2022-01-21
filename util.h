@@ -30,6 +30,9 @@
 
 #define CONTAIN_ETH 0x00000001
 
+#define ETH_802_1Q 0x8100
+#define ETH_IP 0x0800
+
 #define PCAP_HEADER_LENGTH 24
 #define PCAP_PKT_HEADER_LENGTH 16
 
@@ -60,21 +63,24 @@ std::ostream & operator << (std::ostream &outs, const PacketStatistics & ps) {
         outs << *iter << " ";
     outs << "\e[35mavg: \e[0m" << std::accumulate(std::begin(ps.flow_num), std::end(ps.flow_num), 0.0) / ps.flow_num.size();
     outs << "\e[35m max: \e[0m" << *std::max_element(ps.flow_num.begin(), ps.flow_num.end());
-    outs << "\e[35m min: \e[0m" << *std::min_element(ps.flow_num.begin(), ps.flow_num.end()) << std::endl;
+    outs << "\e[35m min: \e[0m" << *std::min_element(ps.flow_num.begin(), ps.flow_num.end());
+    outs << "\e[35m tot: \e[0m" << (uint64_t)std::accumulate(std::begin(ps.flow_num), std::end(ps.flow_num), 0.0) << std::endl;
 
     outs << "\e[31mPacket Number:\e[0m\n";
     for (auto iter =  ps.packet_num.begin(); iter != ps.packet_num.end(); ++iter)
         outs << *iter << " ";
     outs << "\e[35mavg: \e[0m" << std::accumulate(std::begin(ps.packet_num), std::end(ps.packet_num), 0.0) / ps.packet_num.size();
     outs << "\e[35m max: \e[0m" << *std::max_element(ps.packet_num.begin(), ps.packet_num.end());
-    outs << "\e[35m min: \e[0m" << *std::min_element(ps.packet_num.begin(), ps.packet_num.end()) << std::endl;
+    outs << "\e[35m min: \e[0m" << *std::min_element(ps.packet_num.begin(), ps.packet_num.end());
+    outs << "\e[35m tot: \e[0m" << (uint64_t)std::accumulate(std::begin(ps.packet_num), std::end(ps.packet_num), 0.0) << std::endl;
 
     outs << "\e[31mTotal Length(Byte):\e[0m\n";
     for (auto iter = ps.total_len.begin(); iter != ps.total_len.end(); ++iter)
         outs << *iter << " ";
     outs << "\e[35mavg: \e[0m" << std::accumulate(std::begin(ps.total_len), std::end(ps.total_len), 0.0) / ps.total_len.size();
     outs << "\e[35m max: \e[0m" << *std::max_element(ps.total_len.begin(), ps.total_len.end());
-    outs << "\e[35m min: \e[0m" << *std::min_element(ps.total_len.begin(), ps.total_len.end()) << std::endl;
+    outs << "\e[35m min: \e[0m" << *std::min_element(ps.total_len.begin(), ps.total_len.end());
+    outs << "\e[35m tot: \e[0m" << (uint64_t)std::accumulate(std::begin(ps.total_len), std::end(ps.total_len), 0.0) << std::endl;
 
     outs << "\e[31mSkewness: \e[0m" << ps.skewness << std::endl << std::resetiosflags(std::ios::fixed) << std::setprecision(6);
     return outs;

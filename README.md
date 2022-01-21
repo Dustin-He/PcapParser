@@ -42,7 +42,7 @@ val_length = 1			# Whether to include packet length in the value
 # input file path(" is not needed)
 input_path = input_pcap_file
 # output file path
-output_path = ./data.txt
+output_path = output_file
 ```
 
 
@@ -80,3 +80,6 @@ If both are required, than the value of timestamp is put before the value of len
 
 The format is similar as that of the binary file, but we convert every fields into a string.
 
+### TODO
+
+To support 802.3

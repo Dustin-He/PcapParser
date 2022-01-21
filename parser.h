@@ -273,7 +273,8 @@ template<int flowkey_len>
 int PcapParser<flowkey_len>::pcapReadPacket() {
     //读pcap数据包头结构
     if (fread(&packet_header, 16, 1, input) != 1) {
-        printf("Can not read packet_header\n");
+        if (ferror(input))
+            printf("Can not read packet_header\n");
         return 1;
     }
 
@@ -308,15 +309,25 @@ int PcapParser<flowkey_len>::pcapReadPacket() {
     }
 
     if (fread(buffer + sizeof(packet_header), packet_header.caplen, 1, input) != 1) {
-        printf("Can not read the packet\n");
+        if (feof(input))
+            printf("Can not read the packet\n");
         return 1;
     }
 
+    bool other_packet = false;
     uint32_t offset = sizeof(packet_header);
 
     if (contain_eth_header) {
         memcpy(&eth_header, buffer + offset, sizeof(eth_header));
         offset += sizeof(eth_header);
+        if (ntohs(eth_header.frame_type) == ETH_802_1Q) {      //802.1Q
+            offset += 4;
+        }
+        else if (eth_header.frame_type != ETH_IP) {
+            packet_offset += PCAP_PKT_HEADER_LENGTH + packet_header.caplen;
+            other_packet = true;
+            return 4;
+        }
     }
 
     memcpy(&ip_header, buffer + offset, sizeof(ip_header));
@@ -324,7 +335,6 @@ int PcapParser<flowkey_len>::pcapReadPacket() {
 
     /* ip头前4位为版本号, ipv4的为4，ipv6的为6 */
     uint8_t ip_ver = (ip_header.ver_hlen >> 4) & (0b00001111);
-    bool other_packet = false;
     switch (ip_ver) {
         case 4: {
             if (ip_header.protocol == PROTOCOL_TCP && packet_header.caplen > offset - sizeof(packet_header)) {
@@ -399,7 +409,8 @@ template<int flowkey_len>
 int PcapParser<flowkey_len>::pcapParse() {
     fseek(input, 0, SEEK_SET);
     if (fread(&pcap_header, PCAP_HEADER_LENGTH, 1, input) != 1) {
-        printf("Can not read pcap header\n");
+        if (feof(input))
+            printf("Can not read pcap header\n");
         return 1;
     }
     // std::cout << std::hex << pcap_header.magic << std::endl;
@@ -413,8 +424,9 @@ int PcapParser<flowkey_len>::pcapParse() {
         /* Read a packet and make statistics */
         ret = pcapReadPacket();
         bool not_record = false;
-        if (ret != 0 && ret != 4)
+        if (ret != 0 && ret != 4) {
             break;
+        }
         else if (ret == 0) {
             fillFlowKey();
             fillValue();

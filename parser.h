@@ -137,7 +137,7 @@ double PcapParser<flowkey_len>::calculateSkewness() const {
 template<int flowkey_len>
 uint64_t PcapParser<flowkey_len>::convertEndianD(uint64_t x) const {
     if (!network_endian) {
-        return ntohll(x);
+        return PacketHeader::reverseEndianD(x);
     }
     return x;
 }

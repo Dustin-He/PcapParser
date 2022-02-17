@@ -234,6 +234,22 @@ std::string PcapParser<flowkey_len>::getPortStr(uint16_t x) const {
 template<int flowkey_len>
 void PcapParser<flowkey_len>::pcapWritePacketBinary(SketchLab::FlowKey<flowkey_len> k, std::unique_ptr<PcapValue::Value> &v) const {
     fwrite(key_content.cKey(), flowkey_len, 1, output);
+    switch (value_content->scheme) {
+        case 0:
+        break;
+        case 1:
+        fwrite(&value_content->time_stamp, 8, 1, output);
+        break;
+        case 2:
+        fwrite(&value_content->length, 2, 1, output);
+        break;
+        case 3:
+        fwrite(&value_content->time_stamp, 8, 1, output);
+        fwrite(&value_content->length, 2, 1, output);
+        break;
+        default:
+        break;
+    }
 }
 
 template<int flowkey_len>

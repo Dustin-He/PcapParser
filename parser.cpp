@@ -38,7 +38,7 @@ int main(int argc, char *argv[]) {
 
 	assert(((write_to_binary_file ^ write_to_pcap_file ^ write_to_txt_file) == 1) || !(write_to_binary_file || write_to_pcap_file || write_to_txt_file));
 
-	int val_type = ((1?val_timestamp:0) << (PcapValue::ValueScheme::VAL_TIMESTAMP)) + ((1?val_length:0) << (PcapValue::ValueScheme::VAL_LENGTH));
+	int val_type = ((val_timestamp?1:0) << (PcapValue::ValueScheme::VAL_TIMESTAMP)) + ((val_length?1:0) << (PcapValue::ValueScheme::VAL_LENGTH));
 
 	std::unique_ptr<PcapValue::Value> v_ptr(new PcapValue::Value(val_type));
 	switch (key_len) {
